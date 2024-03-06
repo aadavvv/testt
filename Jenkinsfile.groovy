@@ -1,36 +1,20 @@
 import jenkins.model.Jenkins
-import hudson.security.Permission
 
-def getAllUsersAndPermissions() {
-    def allUsersAndPermissions = [:]
+def listPipelinesWithInlineScript() {
+    def pipelinesWithInlineScript = []
 
-    Jenkins.instance.authorizationStrategy.getAllPermissions().each { permission ->
-        allUsersAndPermissions[permission] = []
-
-        Jenkins.instance.getAllItems().each { item ->
-            def permissions = item.getACL().getPermissions()
-            if (permissions.contains(permission)) {
-                permissions[permission].each { principal ->
-                    if (principal.type == 'user') {
-                        allUsersAndPermissions[permission] << principal.name
-                    }
-                }
+    Jenkins.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob).each { job ->
+        def definition = job.getDefinition()
+        if (definition instanceof org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition) {
+            // Check if the definition is an inline script
+            if (definition.scriptPath == null || definition.scriptPath.trim() == "") {
+                pipelinesWithInlineScript << job.fullName
             }
         }
     }
 
-    return allUsersAndPermissions
+    return pipelinesWithInlineScript
 }
 
-def printUsersAndPermissions() {
-    def usersAndPermissions = getAllUsersAndPermissions()
-
-    usersAndPermissions.each { permission, users ->
-        println("Permission: ${permission}")
-        users.unique().each { user ->
-            println("  - ${user}")
-        }
-    }
-}
-
-printUsersAndPermissions()
+def result = listPipelinesWithInlineScript()
+println("Pipelines using inline scripts: $result")
