@@ -1,20 +1,37 @@
 import jenkins.model.Jenkins
+import hudson.security.AuthorizationMatrixProperty
 
-def listPipelinesWithInlineScript() {
-    def pipelinesWithInlineScript = []
+// Get the Jenkins instance
+def jenkins = Jenkins.instance
 
-    Jenkins.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob).each { job ->
-        def definition = job.getDefinition()
-        if (definition instanceof org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition) {
-            // Check if the definition is an inline script
-            if (definition.scriptPath == null || definition.scriptPath.trim() == "") {
-                pipelinesWithInlineScript << job.fullName
+jenkins.items.each { item ->
+    if (item instanceof hudson.model.ItemGroup) {
+        // Check if the item is a folder
+        if (item instanceof hudson.model.CompositeItem) {
+            // Get the folder path
+            def folderPath = item.fullName
+
+            // Get the folder item
+            def folderItem = jenkins.getItemByFullName(folderPath)
+
+            if (folderItem instanceof hudson.model.Item) {
+                // Check if the folder has AuthorizationMatrixProperty
+                def property = folderItem.getProperty(AuthorizationMatrixProperty)
+
+                if (property) {
+                    // Get the permission list
+                    def permissions = property.getGrantedPermissions()
+
+                    // Print the users and their permissions
+                    permissions.each { user ->
+                        println("Folder: ${folderPath}, User: ${user.identity}, Permissions: ${user.permission}")
+                    }
+                } else {
+                    println("Folder ${folderPath} doesn't have AuthorizationMatrixProperty.")
+                }
+            } else {
+                println("Folder not found: ${folderPath}")
             }
         }
     }
-
-    return pipelinesWithInlineScript
 }
-
-def result = listPipelinesWithInlineScript()
-println("Pipelines using inline scripts: $result")
