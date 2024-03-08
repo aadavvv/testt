@@ -4,7 +4,7 @@ def startOfDay = currentDate.clearTime()
 def totalJobsTriggered = 0
 
 Jenkins.instance.getAllItems().each { job ->
-    job.builds.each { build ->
+    job.getBuilds().each { build ->
         if (build.getTime().after(startOfDay)) {
             totalJobsTriggered++
         }
