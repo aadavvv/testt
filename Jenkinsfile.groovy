@@ -1,24 +1,32 @@
-def currentDate = new Date()
-def startOfDay = currentDate.clearTime()
+@Grab(group='org.seleniumhq.selenium', module='selenium-java', version='3.141.59')
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.By
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebElement
 
-def totalJobsTriggered = 0
+// Set the path to chromedriver executable
+System.setProperty("webdriver.chrome.driver", "C:\\path\\to\\chromedriver.exe")
 
-Jenkins.instance.getAllItems().each { job ->
-    job.getBuilds().each { build ->
-        if (build.getTime().after(startOfDay)) {
-            totalJobsTriggered++
-        }
-    }
-}
+// Initialize ChromeDriver
+WebDriver driver = new ChromeDriver()
 
-Jenkins.instance.getAllItems(com.cloudbees.hudson.plugins.folder.Folder.class).each { folder ->
-    folder.getItems().each { job ->
-        job.getBuilds().each { build ->
-            if (build.getTime().after(startOfDay)) {
-                totalJobsTriggered++
-            }
-        }
-    }
-}
+// Open Jenkins URL
+driver.get("http://your-jenkins-url")
 
-println "Total number of jobs triggered today: ${totalJobsTriggered}"
+// Find the username and password fields and login button
+WebElement usernameField = driver.findElement(By.xpath("//input[@id='j_username']"))
+WebElement passwordField = driver.findElement(By.xpath("//input[@name='j_password']"))
+WebElement loginButton = driver.findElement(By.xpath("//input[@name='Submit']"))
+
+// Enter username and password
+usernameField.sendKeys("your-username")
+passwordField.sendKeys("your-password")
+
+// Click on the login button
+loginButton.click()
+
+// Wait for some time to let the login process complete
+Thread.sleep(5000)
+
+// Close the browser
+driver.quit()
